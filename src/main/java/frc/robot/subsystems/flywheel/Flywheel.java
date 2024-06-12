@@ -20,7 +20,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -34,22 +33,28 @@ public class Flywheel extends SubsystemBase {
   public Flywheel(FlywheelIO io) {
     this.io = io;
 
+    io.configurePID(100, 0, 0);
+    ffModel = new SimpleMotorFeedforward(0.1, 0.05);
+
     // Switch constants based on mode (the physics simulator is treated as a
     // separate robot with different tuning)
-    switch (Constants.currentMode) {
+    /*switch (Constants.currentMode) {
       case REAL:
+        // ffModel = new SimpleMotorFeedforward(0.1, 0.05);
+        // io.configurePID(300.0, 0.0, 0.0);
+        // break;
       case REPLAY:
         ffModel = new SimpleMotorFeedforward(0.1, 0.05);
-        io.configurePID(1.0, 0.0, 0.0);
+        io.configurePID(20.0, 0.0, 0.0);
         break;
       case SIM:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.03);
-        io.configurePID(0.5, 0.0, 0.0);
+        ffModel = new SimpleMotorFeedforward(0.1, 0.05);
+        io.configurePID(20.0, 0.0, 0.0);
         break;
       default:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.0);
+        ffModel = new SimpleMotorFeedforward(0.1, 0.05);
         break;
-    }
+    }*/
 
     // Configure SysId
     sysId =
@@ -66,6 +71,7 @@ public class Flywheel extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Flywheel", inputs);
+    // System.out.println(ffModel.ks +", " + io.getP());
   }
 
   /** Run open loop at the specified voltage. */
@@ -87,6 +93,25 @@ public class Flywheel extends SubsystemBase {
     io.stop();
   }
 
+  public Command flywheelGo(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    return run(
+        () -> {
+          io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+        });
+  }
+
+  public Command flywheelCommand(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    return startEnd(
+        () -> {
+          io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+        },
+        () -> {
+          io.setVoltage(0);
+        });
+  }
+
   /** Returns a command to run a quasistatic test in the specified direction. */
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
     return sysId.quasistatic(direction);
@@ -96,6 +121,7 @@ public class Flywheel extends SubsystemBase {
   public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     return sysId.dynamic(direction);
   }
+  // Create a Command here Called FlywheelGo - use intake go as amodel
 
   /** Returns the current velocity in RPM. */
   @AutoLogOutput

@@ -28,7 +28,7 @@ import edu.wpi.first.math.util.Units;
 public class FeederIOSparkMax implements FeederIO {
   private static final double GEAR_RATIO = 1.5;
 
-  private final CANSparkMax leader = new CANSparkMax(13, MotorType.kBrushless);
+  private final CANSparkMax leader = new CANSparkMax(12, MotorType.kBrushless);
   // private final CANSparkMax follower = new CANSparkMax(1, MotorType.kBrushless);
   private final RelativeEncoder encoder = leader.getEncoder();
   private final SparkPIDController pid = leader.getPIDController();
@@ -84,6 +84,6 @@ public class FeederIOSparkMax implements FeederIO {
     pid.setP(kP, 0);
     pid.setI(kI, 0);
     pid.setD(kD, 0);
-    pid.setFF(0, 0);
+    pid.setFF(0.0002, 0);
   }
 }

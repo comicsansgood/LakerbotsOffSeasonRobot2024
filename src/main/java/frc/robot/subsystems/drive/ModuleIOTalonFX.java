@@ -68,29 +68,33 @@ public class ModuleIOTalonFX implements ModuleIO {
 
   public ModuleIOTalonFX(int index) {
     switch (index) {
+        // Front Left
       case 0:
-        driveTalon = new TalonFX(0);
-        turnTalon = new TalonFX(1);
-        cancoder = new CANcoder(2);
-        absoluteEncoderOffset = new Rotation2d(0.0); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(0, "kelsobus");
+        turnTalon = new TalonFX(1, "kelsobus");
+        cancoder = new CANcoder(2, "kelsobus");
+        absoluteEncoderOffset = new Rotation2d(-70 * (Math.PI / 180)); // MUST BE CALIBRATED
         break;
+        // Front Right
       case 1:
-        driveTalon = new TalonFX(3);
-        turnTalon = new TalonFX(4);
-        cancoder = new CANcoder(5);
-        absoluteEncoderOffset = new Rotation2d(0.0); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(3, "kelsobus");
+        turnTalon = new TalonFX(4, "kelsobus");
+        cancoder = new CANcoder(5, "kelsobus");
+        absoluteEncoderOffset = new Rotation2d(-86 * (Math.PI / 180)); // MUST BE CALIBRATED
         break;
+        // Back Left
       case 2:
-        driveTalon = new TalonFX(6);
-        turnTalon = new TalonFX(7);
-        cancoder = new CANcoder(8);
-        absoluteEncoderOffset = new Rotation2d(0.0); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(6, "kelsobus");
+        turnTalon = new TalonFX(7, "kelsobus");
+        cancoder = new CANcoder(8, "kelsobus");
+        absoluteEncoderOffset = new Rotation2d(89 * (Math.PI / 180)); // MUST BE CALIBRATED
         break;
+        // Back Right
       case 3:
-        driveTalon = new TalonFX(9);
-        turnTalon = new TalonFX(10);
-        cancoder = new CANcoder(11);
-        absoluteEncoderOffset = new Rotation2d(0.0); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(9, "kelsobus");
+        turnTalon = new TalonFX(10, "kelsobus");
+        cancoder = new CANcoder(11, "kelsobus");
+        absoluteEncoderOffset = new Rotation2d(86 * (Math.PI / 180)); // MUST BE CALIBRATED
         break;
       default:
         throw new RuntimeException("Invalid module index");

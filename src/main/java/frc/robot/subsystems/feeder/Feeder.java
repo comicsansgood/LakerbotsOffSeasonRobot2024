@@ -17,7 +17,9 @@ import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
@@ -29,6 +31,8 @@ public class Feeder extends SubsystemBase {
   private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
   private final SimpleMotorFeedforward ffModel;
   private final SysIdRoutine sysId;
+  public final DigitalInput noteSensor = new DigitalInput(1);
+  private static final double feederVoltage = 8.0;
 
   /** Creates a new Flywheel. */
   public Feeder(FeederIO io) {
@@ -73,6 +77,83 @@ public class Feeder extends SubsystemBase {
     io.setVoltage(volts);
   }
 
+  public Command feederCommand(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    return startEnd(
+        () -> {
+          io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+        },
+        () -> {
+          io.setVoltage(0);
+        });
+  }
+  ;
+
+  public Command feederGo(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    return run(
+        () -> {
+          io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+        });
+  }
+  ;
+
+  /*
+   public FunctionalCommand feederRunUntilDetecteCommand(double velocityRPM){
+     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+     return FunctionalCommand(
+       ()-> io.stop(),
+        () -> {
+           io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+         }
+       ,
+       () -> {
+           io.setVelocity(0, ffModel.calculate(velocityRadPerSec));
+         }
+       ,
+       ()-> {noteSensor.get();
+        }
+     );
+   }
+  */
+  public Command intakeTest(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    return Commands.sequence(
+        runOnce(
+            () -> {
+              io.setVelocity(velocityRPM, ffModel.calculate(velocityRadPerSec));
+            }),
+        Commands.waitSeconds(1.0),
+        runOnce(
+            () -> {
+              io.setVelocity(0, ffModel.calculate(0));
+            }),
+        Commands.waitSeconds(1.0),
+        runOnce(
+            () -> {
+              io.setVelocity(velocityRPM, ffModel.calculate(velocityRadPerSec));
+            }),
+        Commands.waitSeconds(1.0),
+        runOnce(
+            () -> {
+              io.setVelocity(0, ffModel.calculate(0));
+            }));
+  }
+
+  public Command intakeTest2(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    return Commands.sequence(
+        runOnce(
+            () -> {
+              io.setVelocity(velocityRPM, ffModel.calculate(velocityRadPerSec));
+            }),
+        Commands.waitUntil(() -> isNoteDetected()),
+        runOnce(
+            () -> {
+              io.setVelocity(0, ffModel.calculate(0));
+            }));
+  }
+
   /** Run closed loop at the specified velocity. */
   public void runVelocity(double velocityRPM) {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
@@ -106,5 +187,9 @@ public class Feeder extends SubsystemBase {
   /** Returns the current velocity in radians per second. */
   public double getCharacterizationVelocity() {
     return inputs.velocityRadPerSec;
+  }
+
+  public boolean isNoteDetected() {
+    return !noteSensor.get();
   }
 }

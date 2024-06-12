@@ -26,12 +26,12 @@ import edu.wpi.first.math.util.Units;
  * "CANSparkFlex".
  */
 public class FlywheelIOSparkMax implements FlywheelIO {
-  private static final double GEAR_RATIO = 1.5;
+  private static final double GEAR_RATIO = 0.5; // changed 6/8/24 derrick
 
-  private final CANSparkMax leader = new CANSparkMax(0, MotorType.kBrushless);
-  private final CANSparkMax follower = new CANSparkMax(1, MotorType.kBrushless);
+  public final CANSparkMax leader = new CANSparkMax(14, MotorType.kBrushless);
+  private final CANSparkMax follower = new CANSparkMax(15, MotorType.kBrushless);
   private final RelativeEncoder encoder = leader.getEncoder();
-  private final SparkPIDController pid = leader.getPIDController();
+  public final SparkPIDController pid = leader.getPIDController();
 
   public FlywheelIOSparkMax() {
     leader.restoreFactoryDefaults();
@@ -41,7 +41,7 @@ public class FlywheelIOSparkMax implements FlywheelIO {
     follower.setCANTimeout(250);
 
     leader.setInverted(false);
-    follower.follow(leader, false);
+    follower.follow(leader, true);
 
     leader.enableVoltageCompensation(12.0);
     leader.setSmartCurrentLimit(30);
@@ -84,6 +84,10 @@ public class FlywheelIOSparkMax implements FlywheelIO {
     pid.setP(kP, 0);
     pid.setI(kI, 0);
     pid.setD(kD, 0);
-    pid.setFF(0, 0);
+    pid.setFF(0 /* .0002*/, 0); // / tune this?
+  }
+
+  public double getP() {
+    return pid.getP();
   }
 }

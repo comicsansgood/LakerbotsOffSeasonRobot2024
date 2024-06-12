@@ -40,7 +40,7 @@ public class Intake extends SubsystemBase {
       case REAL:
       case REPLAY:
         ffModel = new SimpleMotorFeedforward(0.1, 0.05);
-        io.configurePID(1.0, 0.0, 0.0);
+        io.configurePID(0.50, 0.0, 0.0);
         break;
       case SIM:
         ffModel = new SimpleMotorFeedforward(0.0, 0.03);
@@ -48,6 +48,7 @@ public class Intake extends SubsystemBase {
         break;
       default:
         ffModel = new SimpleMotorFeedforward(0.0, 0.0);
+        io.configurePID(0.0, 0.0, 0.0);
         break;
     }
 
@@ -71,6 +72,25 @@ public class Intake extends SubsystemBase {
   /** Run open loop at the specified voltage. */
   public void runVolts(double volts) {
     io.setVoltage(volts);
+  }
+
+  public Command intakeCommand(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    return startEnd(
+        () -> {
+          io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+        },
+        () -> {
+          io.setVoltage(0);
+        });
+  }
+
+  public Command intakeGo(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    return run(
+        () -> {
+          io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+        });
   }
 
   /** Run closed loop at the specified velocity. */

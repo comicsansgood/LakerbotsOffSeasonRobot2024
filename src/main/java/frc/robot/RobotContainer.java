@@ -67,23 +67,26 @@ public class RobotContainer {
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
   private final LoggedDashboardNumber intakeSpeedInput =
-      new LoggedDashboardNumber("intake Speed", 1500.0);
+      new LoggedDashboardNumber("intake Speed", -2500.0);
   private final LoggedDashboardNumber feederSpeedInput =
       new LoggedDashboardNumber("feeder Speed", 1500.0);
+  /*
+  private final LoggedDashboardNumber flywheelIdleSpeedInput =
+      new LoggedDashboardNumber("Flywheel Idle Speed", 500.0);
 
-  // SUBSYSTODO - create a logged Dashboard number
+  // TODO - create a logged Dashboard number for "Flywheel IDle Speed"
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
 
         flywheel = new Flywheel(new FlywheelIOSparkMax());
         intake = new Intake(new IntakeIOSparkMax());
-        // feeder = new Feeder(new FeederIOSparkMax());
         feeder = new Feeder(new FeederIOSparkMax());
-        // SUBSYSTODO -
+
         drive =
             new Drive(
                 new GyroIOPigeon2(true),
@@ -107,7 +110,7 @@ public class RobotContainer {
         flywheel = new Flywheel(new FlywheelIOSim());
         intake = new Intake(new IntakeIOSim());
         feeder = new Feeder(new FeederIOSim());
-        // SUBSYSTODO
+
         break;
 
       default:
@@ -123,7 +126,6 @@ public class RobotContainer {
         flywheel = new Flywheel(new FlywheelIO() {});
         intake = new Intake(new IntakeIO() {});
         feeder = new Feeder(new FeederIO() {});
-        // SUBSYSTODO
         break;
     }
 
@@ -185,7 +187,7 @@ public class RobotContainer {
             drive,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            () -> controller.getRightX())); // test to
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
         .b()
@@ -196,16 +198,47 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
+    controller.a().whileTrue(flywheel.flywheelCommand(flywheelSpeedInput.get()));
+
+    // flywheelCommand(flywheelSpeedInput.get()));
+
+    /*Commands.startEnd(
+     () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
+    */
     controller
-        .a()
+        .rightBumper()
         .whileTrue(
-            Commands.startEnd(
-                () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
+            feeder
+                .feederCommand(feederSpeedInput.get())
+                .alongWith(intake.intakeCommand(intakeSpeedInput.get())));
+
+    // () -> feeder.runVelocity(feederSpeedInput.get()), feeder::stop, feeder)
+    // .alongWith(intake.intakeCommand(intakeSpeedInput.get())));
+
+    /*  controller
+            .rightBumper()
+            .onTrue(
+                () -> intake.runVelocity(intakeSpeedInput.get().until(feeder.noteSensor::get)));
+    */
+    /*
+        controller
+            .y()
+            .whileTrue(
+                Commands.startEnd(
+                    () -> feeder.runVelocity(feederSpeedInput.get()), feeder::stop, feeder));
+      }
+    */
+    // controller.y().whileTrue(feeder.feederCommand(feederSpeedInput.get()));
     controller
-        .y()
-        .whileTrue(
-            Commands.startEnd(
-                () -> intake.runVelocity(intakeSpeedInput.get()), intake::stop, intake));
+        .leftBumper()
+        .onTrue(
+            feeder
+                .intakeTest2(feederSpeedInput.get())
+                .raceWith(intake.intakeGo(intakeSpeedInput.get()))
+                .andThen(intake.intakeGo(0)));
+    // .andThen(flywheen.flywheenGo(0));
+    // ***TODO **** add an .andThen(); referring to flywheel go, use the "flywheel idle speed"
+    // logged dashboard input
   }
 
   /**
