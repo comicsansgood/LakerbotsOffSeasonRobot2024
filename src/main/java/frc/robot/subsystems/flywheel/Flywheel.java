@@ -18,6 +18,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -34,7 +35,7 @@ public class Flywheel extends SubsystemBase {
     this.io = io;
 
     io.configurePID(100, 0, 0);
-    ffModel = new SimpleMotorFeedforward(0.1, 0.05);
+    ffModel = new SimpleMotorFeedforward(0.1, 0.13, 0.73);
 
     // Switch constants based on mode (the physics simulator is treated as a
     // separate robot with different tuning)
@@ -64,25 +65,38 @@ public class Flywheel extends SubsystemBase {
                 null,
                 null,
                 (state) -> Logger.recordOutput("Flywheel/SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism((voltage) -> runVolts(voltage.in(Volts)), null, this));
+            new SysIdRoutine.Mechanism((voltage) -> runRightVolts(voltage.in(Volts)), null, this));
   }
 
   @Override
   public void periodic() {
-    io.updateInputs(inputs);
+    io.updateRightInputs(inputs);
+    io.updateLeftInputs(inputs);
     Logger.processInputs("Flywheel", inputs);
     // System.out.println(ffModel.ks +", " + io.getP());
   }
 
   /** Run open loop at the specified voltage. */
-  public void runVolts(double volts) {
-    io.setVoltage(volts);
+  public void runRightVolts(double volts) {
+    io.setRightVoltage(volts);
+  }
+
+  public void runLeftVolts(double volts) {
+    io.setLeftVoltage(volts);
   }
 
   /** Run closed loop at the specified velocity. */
-  public void runVelocity(double velocityRPM) {
+  public void runRightVelocity(double velocityRPM) {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
-    io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+    io.setRightVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+
+    // Log flywheel setpoint
+    Logger.recordOutput("Flywheel/SetpointRPM", velocityRPM);
+  }
+
+  public void runLeftVelocity(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    io.setLeftVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
 
     // Log flywheel setpoint
     Logger.recordOutput("Flywheel/SetpointRPM", velocityRPM);
@@ -97,18 +111,42 @@ public class Flywheel extends SubsystemBase {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
     return run(
         () -> {
-          io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+          io.setRightVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+          io.setLeftVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
         });
+  }
+
+  public Command flywheelUpToSpeed(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    return Commands.sequence(
+        runOnce(
+            () -> {
+              io.setRightVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+              io.setLeftVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+            }),
+        Commands.waitSeconds(2.0));
+  }
+
+  public Command flywheelCoolDown() {
+    return Commands.sequence(
+        Commands.waitSeconds(0.75),
+        runOnce(
+            () -> {
+              io.setLeftVoltage(0);
+              io.setRightVoltage(0);
+            }));
   }
 
   public Command flywheelCommand(double velocityRPM) {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
     return startEnd(
         () -> {
-          io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+          io.setRightVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+          io.setLeftVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
         },
         () -> {
-          io.setVoltage(0);
+          io.setRightVoltage(0);
+          io.setLeftVoltage(0);
         });
   }
 

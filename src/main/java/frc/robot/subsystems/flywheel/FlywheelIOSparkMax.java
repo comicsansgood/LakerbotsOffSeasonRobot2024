@@ -28,45 +28,72 @@ import edu.wpi.first.math.util.Units;
 public class FlywheelIOSparkMax implements FlywheelIO {
   private static final double GEAR_RATIO = 0.5; // changed 6/8/24 derrick
 
-  public final CANSparkMax leader = new CANSparkMax(14, MotorType.kBrushless);
-  private final CANSparkMax follower = new CANSparkMax(15, MotorType.kBrushless);
-  private final RelativeEncoder encoder = leader.getEncoder();
-  public final SparkPIDController pid = leader.getPIDController();
+  public final CANSparkMax right = new CANSparkMax(14, MotorType.kBrushless);
+  private final CANSparkMax left = new CANSparkMax(15, MotorType.kBrushless);
+  private final RelativeEncoder rightEncoder = right.getEncoder();
+  private final RelativeEncoder leftEncoder = left.getEncoder();
+  public final SparkPIDController rightpid = right.getPIDController();
+  public final SparkPIDController leftpid = left.getPIDController();
 
   public FlywheelIOSparkMax() {
-    leader.restoreFactoryDefaults();
-    follower.restoreFactoryDefaults();
+    right.restoreFactoryDefaults();
+    left.restoreFactoryDefaults();
 
-    leader.setCANTimeout(250);
-    follower.setCANTimeout(250);
+    right.setCANTimeout(250);
+    left.setCANTimeout(250);
 
-    leader.setInverted(false);
-    follower.follow(leader, true);
+    right.setInverted(false);
+    left.setInverted(true);
+    // left.follow(right, true); // delete this if we are not in follower mode
 
-    leader.enableVoltageCompensation(12.0);
-    leader.setSmartCurrentLimit(30);
+    right.enableVoltageCompensation(12.0);
+    right.setSmartCurrentLimit(80);
+    left.enableVoltageCompensation(12.0);
+    left.setSmartCurrentLimit(80);
 
-    leader.burnFlash();
-    follower.burnFlash();
+    right.burnFlash();
+    left.burnFlash();
   }
 
   @Override
-  public void updateInputs(FlywheelIOInputs inputs) {
-    inputs.positionRad = Units.rotationsToRadians(encoder.getPosition() / GEAR_RATIO);
+  public void updateRightInputs(FlywheelIOInputs inputs) {
+    inputs.positionRad = Units.rotationsToRadians(rightEncoder.getPosition() / GEAR_RATIO);
     inputs.velocityRadPerSec =
-        Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / GEAR_RATIO);
-    inputs.appliedVolts = leader.getAppliedOutput() * leader.getBusVoltage();
-    inputs.currentAmps = new double[] {leader.getOutputCurrent(), follower.getOutputCurrent()};
+        Units.rotationsPerMinuteToRadiansPerSecond(rightEncoder.getVelocity() / GEAR_RATIO);
+    inputs.appliedVolts = right.getAppliedOutput() * right.getBusVoltage();
+  }
+
+  public void updateLeftInputs(FlywheelIOInputs inputs) {
+    inputs.positionRad = Units.rotationsToRadians(leftEncoder.getPosition() / GEAR_RATIO);
+    inputs.velocityRadPerSec =
+        Units.rotationsPerMinuteToRadiansPerSecond(leftEncoder.getVelocity() / GEAR_RATIO);
+    inputs.appliedVolts = left.getAppliedOutput() * left.getBusVoltage();
+    inputs.currentAmps = new double[] {right.getOutputCurrent(), left.getOutputCurrent()};
   }
 
   @Override
-  public void setVoltage(double volts) {
-    leader.setVoltage(volts);
+  public void setRightVoltage(double volts) {
+    right.setVoltage(volts);
   }
 
   @Override
-  public void setVelocity(double velocityRadPerSec, double ffVolts) {
-    pid.setReference(
+  public void setLeftVoltage(double volts) {
+    left.setVoltage(volts);
+  }
+
+  @Override
+  public void setRightVelocity(double velocityRadPerSec, double ffVolts) {
+    rightpid.setReference(
+        Units.radiansPerSecondToRotationsPerMinute(velocityRadPerSec) * GEAR_RATIO,
+        ControlType.kVelocity,
+        0,
+        ffVolts,
+        ArbFFUnits.kVoltage);
+  }
+
+  @Override
+  public void setLeftVelocity(double velocityRadPerSec, double ffVolts) {
+    leftpid.setReference(
         Units.radiansPerSecondToRotationsPerMinute(velocityRadPerSec) * GEAR_RATIO,
         ControlType.kVelocity,
         0,
@@ -76,18 +103,23 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 
   @Override
   public void stop() {
-    leader.stopMotor();
+    right.stopMotor();
+    left.stopMotor();
   }
 
   @Override
   public void configurePID(double kP, double kI, double kD) {
-    pid.setP(kP, 0);
-    pid.setI(kI, 0);
-    pid.setD(kD, 0);
-    pid.setFF(0 /* .0002*/, 0); // / tune this?
+    rightpid.setP(kP, 0);
+    rightpid.setI(kI, 0);
+    rightpid.setD(kD, 0);
+    rightpid.setFF(0 /* .0002*/, 0); // / tune this?
+    leftpid.setP(kP, 0);
+    leftpid.setI(kI, 0);
+    leftpid.setD(kD, 0);
+    leftpid.setFF(0 /* .0002*/, 0); // / tune this?
   }
 
   public double getP() {
-    return pid.getP();
+    return rightpid.getP();
   }
 }

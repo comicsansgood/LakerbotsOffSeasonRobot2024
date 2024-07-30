@@ -70,31 +70,32 @@ public class ModuleIOTalonFX implements ModuleIO {
     switch (index) {
         // Front Left
       case 0:
-        driveTalon = new TalonFX(0, "kelsobus");
-        turnTalon = new TalonFX(1, "kelsobus");
-        cancoder = new CANcoder(2, "kelsobus");
-        absoluteEncoderOffset = new Rotation2d(-70 * (Math.PI / 180)); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(0, "kelsobus"); // 0
+        turnTalon = new TalonFX(1, "kelsobus"); // 1
+        cancoder = new CANcoder(2, "kelsobus"); // 2
+        absoluteEncoderOffset = new Rotation2d((-70 + 2.29) * (Math.PI / 180)); // -70
         break;
         // Front Right
       case 1:
-        driveTalon = new TalonFX(3, "kelsobus");
-        turnTalon = new TalonFX(4, "kelsobus");
-        cancoder = new CANcoder(5, "kelsobus");
-        absoluteEncoderOffset = new Rotation2d(-86 * (Math.PI / 180)); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(3, "kelsobus"); // 3
+        turnTalon = new TalonFX(4, "kelsobus"); // 4
+        cancoder = new CANcoder(5, "kelsobus"); // 5
+        absoluteEncoderOffset =
+            new Rotation2d((-86 + 14.1 + 3 + 5 + 10 - 15 - 5 - 1 - 2) * (Math.PI / 180)); // -86
         break;
         // Back Left
       case 2:
-        driveTalon = new TalonFX(6, "kelsobus");
-        turnTalon = new TalonFX(7, "kelsobus");
-        cancoder = new CANcoder(8, "kelsobus");
-        absoluteEncoderOffset = new Rotation2d(89 * (Math.PI / 180)); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(6, "kelsobus"); // 6
+        turnTalon = new TalonFX(7, "kelsobus"); // 7
+        cancoder = new CANcoder(8, "kelsobus"); // 8
+        absoluteEncoderOffset = new Rotation2d((89 + 4.927) * (Math.PI / 180)); // 89
         break;
         // Back Right
       case 3:
-        driveTalon = new TalonFX(9, "kelsobus");
-        turnTalon = new TalonFX(10, "kelsobus");
-        cancoder = new CANcoder(11, "kelsobus");
-        absoluteEncoderOffset = new Rotation2d(86 * (Math.PI / 180)); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(9, "kelsobus"); // 9
+        turnTalon = new TalonFX(10, "kelsobus"); // 10
+        cancoder = new CANcoder(11, "kelsobus"); // 11
+        absoluteEncoderOffset = new Rotation2d((86 + 1.146) * (Math.PI / 180)); // 86
         break;
       default:
         throw new RuntimeException("Invalid module index");

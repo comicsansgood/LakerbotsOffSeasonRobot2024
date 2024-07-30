@@ -25,13 +25,18 @@ public interface FlywheelIO {
   }
 
   /** Updates the set of loggable inputs. */
-  public default void updateInputs(FlywheelIOInputs inputs) {}
+  public default void updateRightInputs(FlywheelIOInputs inputs) {}
+
+  public default void updateLeftInputs(FlywheelIOInputs inputs) {}
 
   /** Run open loop at the specified voltage. */
-  public default void setVoltage(double volts) {}
+  public default void setRightVoltage(double volts) {}
 
+  public default void setLeftVoltage(double volts) {}
   /** Run closed loop at the specified velocity. */
-  public default void setVelocity(double velocityRadPerSec, double ffVolts) {}
+  public default void setRightVelocity(double velocityRadPerSec, double ffVolts) {}
+
+  public default void setLeftVelocity(double velocityRadPerSec, double ffVolts) {}
 
   /** Stop in open loop. */
   public default void stop() {}

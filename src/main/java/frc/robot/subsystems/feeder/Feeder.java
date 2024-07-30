@@ -32,7 +32,7 @@ public class Feeder extends SubsystemBase {
   private final SimpleMotorFeedforward ffModel;
   private final SysIdRoutine sysId;
   public final DigitalInput noteSensor = new DigitalInput(1);
-  private static final double feederVoltage = 8.0;
+  // private static final double feederVoltage = 8.0;
 
   /** Creates a new Flywheel. */
   public Feeder(FeederIO io) {
@@ -91,7 +91,7 @@ public class Feeder extends SubsystemBase {
 
   public Command feederGo(double velocityRPM) {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
-    return run(
+    return runOnce(
         () -> {
           io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
         });
@@ -150,9 +150,29 @@ public class Feeder extends SubsystemBase {
         Commands.waitUntil(() -> isNoteDetected()),
         runOnce(
             () -> {
+              io.setVelocity(250, ffModel.calculate(0));
+            }),
+        // Commands.waitSeconds(0.25),
+        Commands.waitUntil(() -> isNoteNotDetected()),
+        runOnce(
+            () -> {
+              io.setVelocity(-50, ffModel.calculate(0));
+            }),
+
+        // run once with negative
+        // wait
+        Commands.waitSeconds(0.5),
+        runOnce(
+            () -> {
               io.setVelocity(0, ffModel.calculate(0));
             }));
   }
+
+  /*
+  intake until sensor is tripped
+  keep intaking until sensor is not tripped
+  back off a little bit
+  */
 
   /** Run closed loop at the specified velocity. */
   public void runVelocity(double velocityRPM) {
@@ -192,4 +212,9 @@ public class Feeder extends SubsystemBase {
   public boolean isNoteDetected() {
     return !noteSensor.get();
   }
+
+  public boolean isNoteNotDetected() {
+    return noteSensor.get();
+  }
+  // is note not detected create a boolean
 }

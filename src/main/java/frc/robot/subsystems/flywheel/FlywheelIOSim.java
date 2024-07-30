@@ -27,7 +27,7 @@ public class FlywheelIOSim implements FlywheelIO {
   private double appliedVolts = 0.0;
 
   @Override
-  public void updateInputs(FlywheelIOInputs inputs) {
+  public void updateRightInputs(FlywheelIOInputs inputs) {
     if (closedLoop) {
       appliedVolts =
           MathUtil.clamp(pid.calculate(sim.getAngularVelocityRadPerSec()) + ffVolts, -12.0, 12.0);
@@ -43,14 +43,14 @@ public class FlywheelIOSim implements FlywheelIO {
   }
 
   @Override
-  public void setVoltage(double volts) {
+  public void setRightVoltage(double volts) {
     closedLoop = false;
     appliedVolts = volts;
     sim.setInputVoltage(volts);
   }
 
   @Override
-  public void setVelocity(double velocityRadPerSec, double ffVolts) {
+  public void setRightVelocity(double velocityRadPerSec, double ffVolts) {
     closedLoop = true;
     pid.setSetpoint(velocityRadPerSec);
     this.ffVolts = ffVolts;
@@ -58,7 +58,7 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void stop() {
-    setVoltage(0.0);
+    setRightVoltage(0.0);
   }
 
   @Override

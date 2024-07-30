@@ -65,7 +65,7 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardNumber flywheelSpeedInput =
-      new LoggedDashboardNumber("Flywheel Speed", 1500.0);
+      new LoggedDashboardNumber("Flywheel Speed", 1000.0);
   private final LoggedDashboardNumber intakeSpeedInput =
       new LoggedDashboardNumber("intake Speed", -2500.0);
   private final LoggedDashboardNumber feederSpeedInput =
@@ -133,7 +133,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Run Flywheel",
         Commands.startEnd(
-                () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel)
+                () -> flywheel.runRightVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel)
             .withTimeout(5.0));
 
     NamedCommands.registerCommand(
@@ -145,6 +145,15 @@ public class RobotContainer {
         "Run Feeder",
         Commands.startEnd(() -> feeder.runVelocity(feederSpeedInput.get()), feeder::stop, feeder)
             .withTimeout(5.0));
+
+    NamedCommands.registerCommand(
+        "AutoLaunch",
+        Commands.sequence(
+            flywheel.flywheelUpToSpeed(flywheelSpeedInput.get()), // this has a 0.75 wait
+            feeder.feederGo(feederSpeedInput.get()).withTimeout(0.5),
+            flywheel.flywheelCoolDown(),
+            (feeder.feederGo(0))));
+
     // SUBSYSTODO
 
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -188,7 +197,7 @@ public class RobotContainer {
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
             () -> controller.getRightX())); // test to
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
         .b()
         .onTrue(
@@ -198,48 +207,35 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
-    controller.a().whileTrue(flywheel.flywheelCommand(flywheelSpeedInput.get()));
 
-    // flywheelCommand(flywheelSpeedInput.get()));
+    controller.a().whileTrue(feeder.feederCommand(-1000));
 
-    /*Commands.startEnd(
-     () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
-    */
     controller
-        .rightBumper()
+        .x()
         .whileTrue(
             feeder
                 .feederCommand(feederSpeedInput.get())
                 .alongWith(intake.intakeCommand(intakeSpeedInput.get())));
-
-    // () -> feeder.runVelocity(feederSpeedInput.get()), feeder::stop, feeder)
-    // .alongWith(intake.intakeCommand(intakeSpeedInput.get())));
-
-    /*  controller
-            .rightBumper()
-            .onTrue(
-                () -> intake.runVelocity(intakeSpeedInput.get().until(feeder.noteSensor::get)));
-    */
-    /*
-        controller
-            .y()
-            .whileTrue(
-                Commands.startEnd(
-                    () -> feeder.runVelocity(feederSpeedInput.get()), feeder::stop, feeder));
-      }
-    */
-    // controller.y().whileTrue(feeder.feederCommand(feederSpeedInput.get()));
     controller
-        .leftBumper()
+        .rightBumper()
         .onTrue(
             feeder
                 .intakeTest2(feederSpeedInput.get())
                 .raceWith(intake.intakeGo(intakeSpeedInput.get()))
-                .andThen(intake.intakeGo(0)));
-    // .andThen(flywheen.flywheenGo(0));
-    // ***TODO **** add an .andThen(); referring to flywheel go, use the "flywheel idle speed"
-    // logged dashboard input
+                .andThen(intake.intakeStop())
+            // .alongWith(flywheel.flywheelGo(500))
+            );
+
+    controller
+        .leftBumper()
+        .onTrue(
+            Commands.sequence(
+                flywheel.flywheelUpToSpeed(flywheelSpeedInput.get()), // this has a 0.75 wait
+                feeder.feederGo(feederSpeedInput.get()).withTimeout(0.5),
+                flywheel.flywheelCoolDown().andThen(feeder.feederGo(0))));
   }
+
+  // logged dashboard input
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

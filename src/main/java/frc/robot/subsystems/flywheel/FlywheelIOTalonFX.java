@@ -52,7 +52,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   }
 
   @Override
-  public void updateInputs(FlywheelIOInputs inputs) {
+  public void updateRightInputs(FlywheelIOInputs inputs) {
     BaseStatusSignal.refreshAll(
         leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent);
     inputs.positionRad = Units.rotationsToRadians(leaderPosition.getValueAsDouble()) / GEAR_RATIO;
@@ -64,12 +64,12 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   }
 
   @Override
-  public void setVoltage(double volts) {
+  public void setLeftVoltage(double volts) {
     leader.setControl(new VoltageOut(volts));
   }
 
   @Override
-  public void setVelocity(double velocityRadPerSec, double ffVolts) {
+  public void setRightVelocity(double velocityRadPerSec, double ffVolts) {
     leader.setControl(
         new VelocityVoltage(
             Units.radiansToRotations(velocityRadPerSec),
