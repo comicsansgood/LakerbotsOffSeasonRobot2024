@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "offSeasonV2"
+		},
+		{
+			"path": "Lakerbots2024"
+		},
+		{
+			"path": "../AdvantageKit_AdvancedSwerveDriveProject"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"java.server.launchMode": "Standard"
+	}
+}
