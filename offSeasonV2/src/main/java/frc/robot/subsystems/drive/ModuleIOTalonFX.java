@@ -55,40 +55,40 @@ public class ModuleIOTalonFX implements ModuleIO {
   private final StatusSignal<Double> turnCurrent;
 
   // Gear ratios for SDS MK4i, select ratios as necessary
-  private final double DRIVE_GEAR_RATIO = (50.0 / 14.0) * (19.0 / 25.0) * (45.0 / 15.0); // L1
+  // private final double DRIVE_GEAR_RATIO = (50.0 / 14.0) * (19.0 / 25.0) * (45.0 / 15.0); // L1
   // private final double DRIVE_GEAR_RATIO = (50.0 / 14.0) * (17.0 / 27.0) * (45.0 / 15.0); // L2
- // private final double DRIVE_GEAR_RATIO = (50.0 / 14.0) * (16.0 / 28.0) * (45.0 / 15.0); // L3
+  private final double DRIVE_GEAR_RATIO = (50.0 / 14.0) * (16.0 / 28.0) * (45.0 / 15.0); // L3
 
   private final double TURN_GEAR_RATIO = 150.0 / 7.0;
 
-  private final boolean isTurnMotorInverted = true;//TODO:change this value to true???????????????????????????????????????????????????
+  private final boolean isTurnMotorInverted = true;
   private final Rotation2d absoluteEncoderOffset;
 
   public ModuleIOTalonFX(int index) {
     switch (index) {
       case 0: // FL
-        driveTalon = new TalonFX(0, "kelsobus");
-        turnTalon = new TalonFX(1, "kelsobus");
-        cancoder = new CANcoder(2, "kelsobus");
-        absoluteEncoderOffset = new Rotation2d(-0.271520872); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(1, "kelsobus");
+        turnTalon = new TalonFX(2, "kelsobus");
+        cancoder = new CANcoder(3, "kelsobus");
+        absoluteEncoderOffset = new Rotation2d(Math.toRadians(-70)); // MUST BE CALIBRATED
         break;
       case 1: // FR
-        driveTalon = new TalonFX(3, "kelsobus");
-        turnTalon = new TalonFX(4, "kelsobus");
-        cancoder = new CANcoder(5, "kelsobus");
-        absoluteEncoderOffset = new Rotation2d(1.920542856); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(4, "kelsobus");
+        turnTalon = new TalonFX(5, "kelsobus");
+        cancoder = new CANcoder(6, "kelsobus");
+        absoluteEncoderOffset = new Rotation2d(Math.toRadians(-80)); // MUST BE CALIBRATED
         break;
       case 2: // BL
-        driveTalon = new TalonFX(6, "kelsobus");
-        turnTalon = new TalonFX(7, "kelsobus");
-        cancoder = new CANcoder(8, "kelsobus");
-        absoluteEncoderOffset = new Rotation2d(2.734512059); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(7, "kelsobus");
+        turnTalon = new TalonFX(8, "kelsobus");
+        cancoder = new CANcoder(9, "kelsobus");
+        absoluteEncoderOffset = new Rotation2d(Math.toRadians(95)); // MUST BE CALIBRATED
         break;
       case 3: // BR
-        driveTalon = new TalonFX(9, "kelsobus");
-        turnTalon = new TalonFX(10, "kelsobus");
-        cancoder = new CANcoder(11, "kelsobus");
-        absoluteEncoderOffset = new Rotation2d(-1.84079631861); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(10, "kelsobus");
+        turnTalon = new TalonFX(11, "kelsobus");
+        cancoder = new CANcoder(12, "kelsobus");
+        absoluteEncoderOffset = new Rotation2d(Math.toRadians(80));// MUST BE CALIBRATED
         break;
       default:
         throw new RuntimeException("Invalid module index");
@@ -98,7 +98,7 @@ public class ModuleIOTalonFX implements ModuleIO {
     driveConfig.CurrentLimits.StatorCurrentLimit = 40.0;
     driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     driveTalon.getConfigurator().apply(driveConfig);
-    setDriveBrakeMode(false);
+    setDriveBrakeMode(true);
 
     var turnConfig = new TalonFXConfiguration();
     turnConfig.CurrentLimits.StatorCurrentLimit = 30.0;

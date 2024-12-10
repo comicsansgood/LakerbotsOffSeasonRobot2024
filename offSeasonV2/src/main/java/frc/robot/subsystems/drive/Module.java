@@ -1,16 +1,3 @@
-// Copyright 2021-2024 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -24,7 +11,6 @@ import org.littletonrobotics.junction.Logger;
 
 public class Module {
   private static final double WHEEL_RADIUS = Units.inchesToMeters(2.0);
-  static final double ODOMETRY_FREQUENCY = 250.0;
 
   private final ModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
@@ -36,7 +22,7 @@ public class Module {
   private Rotation2d angleSetpoint = null; // Setpoint for closed loop control, null for open loop
   private Double speedSetpoint = null; // Setpoint for closed loop control, null for open loop
   private Rotation2d turnRelativeOffset = null; // Relative + Offset = Absolute
-  private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
+  private double lastPositionMeters = 0.0; // Used for delta calculation
 
   public Module(ModuleIO io, int index) {
     this.io = io;
@@ -46,10 +32,6 @@ public class Module {
     // separate robot with different tuning)
     switch (Constants.currentMode) {
       case REAL:
-        driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
-        driveFeedback = new PIDController(0.0, 0.0, 0.0); // 0,0,0
-        turnFeedback = new PIDController(12.0, 0.0, 0.0); // 0,0,0
-        break;
       case REPLAY:
         driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
         driveFeedback = new PIDController(0.05, 0.0, 0.0);
@@ -61,9 +43,9 @@ public class Module {
         turnFeedback = new PIDController(10.0, 0.0, 0.0);
         break;
       default:
-        driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
-        driveFeedback = new PIDController(0.0, 0.0, 0.0); // 0,0,0
-        turnFeedback = new PIDController(12.0, 0.0, 0.0); // 0,0,0
+        driveFeedforward = new SimpleMotorFeedforward(0.0, 0.0);
+        driveFeedback = new PIDController(0.0, 0.0, 0.0);
+        turnFeedback = new PIDController(0.0, 0.0, 0.0);
         break;
     }
 
@@ -71,15 +53,8 @@ public class Module {
     setBrakeMode(true);
   }
 
-  /**
-   * Update inputs without running the rest of the periodic logic. This is useful since these
-   * updates need to be properly thread-locked.
-   */
-  public void updateInputs() {
-    io.updateInputs(inputs);
-  }
-
   public void periodic() {
+    io.updateInputs(inputs);
     Logger.processInputs("Drive/Module" + Integer.toString(index), inputs);
 
     // On first cycle, reset relative turn encoder
@@ -110,22 +85,6 @@ public class Module {
                 + driveFeedback.calculate(inputs.driveVelocityRadPerSec, velocityRadPerSec));
       }
     }
-
-    
-    
-    
-    //TODO://////////////////////////////////////Not in 2024 project and throwing errors so idk might be needed////////////////////
-    /*// Calculate positions for odometry
-    int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
-    odometryPositions = new SwerveModulePosition[sampleCount];
-    for (int i = 0; i < sampleCount; i++) {
-      double positionMeters = inputs.odometryDrivePositionsRad[i] * WHEEL_RADIUS;
-      Rotation2d angle =
-          inputs.odometryTurnPositions[i].plus(
-              turnRelativeOffset != null ? turnRelativeOffset : new Rotation2d());
-      odometryPositions[i] = new SwerveModulePosition(positionMeters, angle);
-    }
-    */
   }
 
   /** Runs the module with the specified setpoint state. Returns the optimized state. */
@@ -191,21 +150,17 @@ public class Module {
     return new SwerveModulePosition(getPositionMeters(), getAngle());
   }
 
+  /** Returns the module position delta since the last call to this method. */
+  public SwerveModulePosition getPositionDelta() {
+    var delta = new SwerveModulePosition(getPositionMeters() - lastPositionMeters, getAngle());
+    lastPositionMeters = getPositionMeters();
+    return delta;
+  }
+
   /** Returns the module state (turn angle and drive velocity). */
   public SwerveModuleState getState() {
     return new SwerveModuleState(getVelocityMetersPerSec(), getAngle());
   }
-
-  /** Returns the module positions received this cycle. */
-  public SwerveModulePosition[] getOdometryPositions() {
-    return odometryPositions;
-  }
-//TODO:///////////////////SAME HERE?>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  /*
-  public double[] getOdometryTimestamps() {
-    return inputs.odometryTimestamps;
-  }
-  */
 
   /** Returns the drive velocity in radians/sec. */
   public double getCharacterizationVelocity() {

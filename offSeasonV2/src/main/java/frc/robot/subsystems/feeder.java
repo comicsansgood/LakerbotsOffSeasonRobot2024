@@ -5,9 +5,11 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.commands.ComplexCommands;
 
 public class feeder extends SubsystemBase {
 
@@ -26,8 +28,8 @@ public class feeder extends SubsystemBase {
     
   }
 
-  public Command feederGo(double speed) {
-    return runOnce(() -> feederMotor.set(speed));
+  public void feederGo(double speed) {
+    feederMotor.set(speed);
   }
 
   public boolean isNoteDetected(){
@@ -36,25 +38,35 @@ public class feeder extends SubsystemBase {
 
   public Command feederGoUntilNoteDetected(){
     return runOnce(()-> {
-      feederGo(.10).andThen(Commands.waitUntil(() -> isNoteDetected()));
-  });
+      feederGo(.3);}).andThen(Commands.waitUntil(() -> isNoteDetected()));
   }
 
   public Command feederGoUntilNoteNotDetected(){
     return runOnce(()-> {
-      feederGo(.10).andThen(Commands.waitUntil(() -> !isNoteDetected()));
-  });
-  }
+      feederGo(.3);}).andThen(Commands.waitUntil(() -> !isNoteDetected()));
+  };
+
 
   public Command feederIntakeSequence(){
   
     return Commands.sequence(
-      feederGoUntilNoteDetected(), 
-      feederGo(0), 
+      feederGoUntilNoteDetected(),
+      runOnce(() -> {feederGo(0);}),
+      Commands.waitSeconds(0.2),
+      feederGoUntilNoteNotDetected(),
+      runOnce(() -> {feederGo(0);}),
+      Commands.waitSeconds(0.2),
+      runOnce(() -> {feederGo(-0.1);}),
+      Commands.waitSeconds(0.5),
+      runOnce(() -> {feederGo(0);})
+
+
+      //runOnce(() -> {System.out.println("DONE\nDONE\nDONE\nDONE\nDONE");})//, 
+      /*runOnce(() -> {feederGo(0);}), 
       feederGoUntilNoteNotDetected(), 
-      feederGo(-0.1), 
+      runOnce(() -> {feederGo(-0.1);}), 
       Commands.waitSeconds(0.5), 
-      feederGo(0)
+      runOnce(() -> {feederGo(0);})*/
     );
   }
 
@@ -71,6 +83,8 @@ public class feeder extends SubsystemBase {
 
   @Override
   public void periodic() {
+        SmartDashboard.putBoolean("Note detected", isNoteDetected());
+
   }
 
   @Override

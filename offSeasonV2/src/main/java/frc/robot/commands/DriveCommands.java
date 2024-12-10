@@ -34,6 +34,27 @@ public class DriveCommands {
 
   private DriveCommands() {}
 
+    public static Command manualDrive(
+      Drive drive,
+      Double x,
+      Double y,
+      Double omegaDouble){
+
+    return Commands.run(
+      ()->{
+    
+      
+       drive.runVelocity(
+                ChassisSpeeds.fromFieldRelativeSpeeds(
+                    x,
+                    y,
+                   omegaDouble,
+                    drive.getRotation()));
+    
+      }
+    );
+  }
+
   /**
    * Field relative drive command using two joysticks (controlling linear and angular velocities).
    */
@@ -112,9 +133,9 @@ public class DriveCommands {
                     .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
                     .getTranslation();
 
-            if (DriverStation.getAlliance().get() == Alliance.Red){
+            //if (DriverStation.getAlliance().get() == Alliance.Red){
               linearVelocity = linearVelocity.rotateBy(Rotation2d.fromRadians(Math.PI));
-            }
+           // }
 
             // Convert to field relative speeds & send command
             drive.runVelocity(
@@ -140,4 +161,11 @@ public class DriveCommands {
         drive);
     }
   }
+
+
+
+  public static Command zeroGyro(Drive drive){
+    return Commands.runOnce(() -> {drive.resetHeading();});
+  }
+
 }

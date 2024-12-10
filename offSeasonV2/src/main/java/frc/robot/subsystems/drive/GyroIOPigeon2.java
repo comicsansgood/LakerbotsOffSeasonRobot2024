@@ -23,7 +23,7 @@ import edu.wpi.first.math.util.Units;
 
 /** IO implementation for Pigeon2 */
 public class GyroIOPigeon2 implements GyroIO {
-  private final Pigeon2 pigeon = new Pigeon2(16, "kelsobus");
+  private final Pigeon2 pigeon = new Pigeon2(0, "kelsobus");
   private final StatusSignal<Double> yaw = pigeon.getYaw();
   private final StatusSignal<Double> yawVelocity = pigeon.getAngularVelocityZDevice(); // TODO : There is a device frame and a world frame, device = old implementation, but is world better here? - EKM
 
@@ -46,4 +46,6 @@ public class GyroIOPigeon2 implements GyroIO {
   public void reset(){
     pigeon.reset();
   }
+
+  
 }

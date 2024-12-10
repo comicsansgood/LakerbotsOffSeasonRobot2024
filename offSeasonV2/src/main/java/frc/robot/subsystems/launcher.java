@@ -57,9 +57,10 @@ public class launcher extends SubsystemBase {
     });
   }
 
-  public Command launcherUptoSpeed(double leftV, double rightV){
+  public Command launcherUptoSpeed(double speed){
     return runOnce(()-> {
-    launcherSetVelocity(leftV, rightV);
+    //launcherSetVelocity(leftV, rightV);
+    launcherGo(speed);
     Commands.waitSeconds(0.75);
     });
   }

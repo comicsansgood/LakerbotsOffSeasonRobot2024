@@ -36,6 +36,6 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
   }
   public static class LauncherConstants{
-    public static final int launcherSpeed = 100;//TODO: programmer number
+    public static final double launcherSpeed = 0.25;
   }
 }
